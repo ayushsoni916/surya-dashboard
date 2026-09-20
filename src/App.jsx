@@ -1,107 +1,372 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, X, Layers, Tag, ChevronRight, ChevronLeft, Edit2, Trash2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { read, utils } from 'xlsx';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-// --- PRODUCT DETAILS SLIDE-IN COMPONENT ---
-const ProductSlideSheet = ({ product, onClose }) => {
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  
-  // Safely grab images or fallback
-  const availableImages = useMemo(() => {
-    const imgs = [product['Thumbnail URL'], product['Image 1 URL'], product['Image 2 URL']].filter(Boolean);
-    return imgs.length > 0 ? imgs : ["https://placehold.co/600x600?text=No+Image"];
+import {
+  Search,
+  X,
+  Layers,
+  Tag,
+  ChevronRight,
+  ChevronLeft,
+  Edit2,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  RefreshCw,
+  Package,
+  IndianRupee,
+  Power,
+  Save,
+  SlidersHorizontal,
+  ImageIcon,
+  ChevronDown,
+} from "lucide-react";
+
+const API_BASE = "http://localhost:5001/api";
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const formatPrice = (value) => {
+  return Number(value || 0).toLocaleString("en-IN");
+};
+
+const getProductImages = (product) => {
+  const images = [];
+
+  if (product?.thumbnail?.url) {
+    images.push({
+      type: "thumbnail",
+      url: product.thumbnail.url,
+    });
+  }
+
+  if (Array.isArray(product?.images)) {
+    product.images.forEach((image, index) => {
+      if (image?.url) {
+        images.push({
+          type: `image-${index + 1}`,
+          url: image.url,
+        });
+      }
+    });
+  }
+
+  return images;
+};
+
+const getRelationName = (value) => {
+  if (!value) return "N/A";
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return value.name || "N/A";
+};
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+const StatusBadge = ({ active }) => {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
+        active
+          ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+          : "bg-red-50 text-red-600 border-red-100"
+      }`}
+    >
+      {active ? (
+        <CheckCircle2 size={12} />
+      ) : (
+        <XCircle size={12} />
+      )}
+
+      {active ? "Active" : "Inactive"}
+    </span>
+  );
+};
+
+/* =========================================================
+   PRODUCT DETAILS DRAWER
+========================================================= */
+
+const ProductSlideSheet = ({
+  product,
+  onClose,
+  onEdit,
+  onStatusChange,
+}) => {
+  const [activeImageIndex, setActiveImageIndex] =
+    useState(0);
+
+  const images = useMemo(
+    () => getProductImages(product),
+    [product]
+  );
+
+  useEffect(() => {
+    setActiveImageIndex(0);
   }, [product]);
 
-  useEffect(() => { setActiveImageIndex(0); }, [product]);
+  if (!product) return null;
 
-  const sku = product.SKU || product.MODEL || 'N/A';
-  const brand = product.Brand || 'LG';
-  const category = product.Category || product.PRODUCT || 'N/A';
-  const mrp = product.MRP || 0;
-  const dp = product['DP (Dealer Price)'] || product.DP || 0;
-  const netPrice = product['Net Price'] || product['net price'] || 0;
-  const status = product.Status || 'Approved';
+  const currentImage =
+    images[activeImageIndex]?.url;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm transition-opacity">
-      <div className="w-full max-w-md bg-[#F8FAFC] h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-        
-        {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b border-gray-200/60 sticky top-0 bg-white/80 backdrop-blur-xl z-10">
-          <div className="pr-4">
-            <h2 className="text-xl font-black text-slate-900 leading-tight tracking-tight">{product.Title || `${brand} ${category} - ${sku}`}</h2>
-            <div className="flex items-center gap-3 mt-1.5">
-              <p className="text-xs font-bold text-surya-500 uppercase tracking-widest">{sku}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-              }`}>
-                {status}
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40 backdrop-blur-sm">
+      <div className="w-full max-w-xl bg-[#F8FAFC] h-full shadow-2xl flex flex-col">
+        {/* HEADER */}
+
+        <div className="flex justify-between items-start p-6 border-b border-slate-200 bg-white sticky top-0 z-20">
+          <div className="pr-6">
+            <div className="flex items-center gap-2 mb-2">
+              <StatusBadge
+                active={product.isActive}
+              />
+
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {product.sku}
               </span>
             </div>
+
+            <h2 className="text-xl font-black text-slate-900 leading-tight">
+              {product.title}
+            </h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-800 bg-white hover:bg-slate-100 p-2 rounded-full border border-slate-200 shadow-sm shrink-0 transition-all duration-200 hover:rotate-90">
+
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition"
+          >
             <X size={18} />
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          <div className="bg-white rounded-2xl p-4 border border-slate-200/60 shadow-sm space-y-4">
-            <div className="bg-slate-50 rounded-xl overflow-hidden flex justify-center items-center h-64 relative group border border-slate-100 p-4">
-              <img src={availableImages[activeImageIndex]} alt={sku} className="max-h-full max-w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+        {/* CONTENT */}
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* IMAGE GALLERY */}
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <div className="h-72 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden">
+              {currentImage ? (
+                <img
+                  src={currentImage}
+                  alt={product.sku}
+                  className="max-h-full max-w-full object-contain p-4"
+                />
+              ) : (
+                <div className="text-center text-slate-400">
+                  <ImageIcon
+                    size={42}
+                    className="mx-auto mb-2"
+                  />
+
+                  <p className="text-xs font-bold">
+                    No product image
+                  </p>
+                </div>
+              )}
             </div>
-            {availableImages.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {availableImages.map((imgUrl, idx) => (
-                  <button 
-                    key={idx} onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
-                      activeImageIndex === idx ? 'border-surya-500 shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={imgUrl} className="w-full h-full object-cover bg-white" alt={`View ${idx + 1}`} />
-                  </button>
-                ))}
+
+            {images.length > 1 && (
+              <div className="flex gap-3 mt-4 overflow-x-auto pb-1">
+                {images.map(
+                  (image, index) => (
+                    <button
+                      key={`${image.url}-${index}`}
+                      onClick={() =>
+                        setActiveImageIndex(
+                          index
+                        )
+                      }
+                      className={`w-16 h-16 shrink-0 rounded-xl border-2 overflow-hidden bg-white ${
+                        activeImageIndex ===
+                        index
+                          ? "border-orange-500"
+                          : "border-slate-200"
+                      }`}
+                    >
+                      <img
+                        src={image.url}
+                        alt=""
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200/60 text-xs font-bold text-slate-700 shadow-sm"><Tag className="w-3.5 h-3.5 text-surya-500" /> {brand}</span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200/60 text-xs font-bold text-slate-700 shadow-sm"><Layers className="w-3.5 h-3.5 text-surya-500" /> {category}</span>
+          {/* CLASSIFICATION */}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <InfoCard
+              label="Brand"
+              value={getRelationName(
+                product.brand
+              )}
+              icon={<Tag size={15} />}
+            />
+
+            <InfoCard
+              label="Category"
+              value={getRelationName(
+                product.category
+              )}
+              icon={<Layers size={15} />}
+            />
+
+            <InfoCard
+              label="Subcategory"
+              value={getRelationName(
+                product.subcategory
+              )}
+              icon={<Package size={15} />}
+            />
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-surya-400 to-surya-600"></div>
-            <div className="bg-slate-50/50 px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Financial Overview</span>
+          {/* PRICING */}
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                Pricing
+              </p>
             </div>
+
             <div className="p-5 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-slate-500">Maximum Retail Price</span>
-                <span className="font-bold text-slate-400 line-through">₹{Number(mrp).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-slate-700">Dealer Price (DP)</span>
-                <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">₹{Number(dp).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-end pt-4 border-t border-slate-100">
-                <div>
-                  <span className="block text-xs font-bold text-surya-500 uppercase tracking-wider mb-1">Final Net Price</span>
-                  <span className="text-2xl font-black text-slate-900 tracking-tight">₹{Number(netPrice).toLocaleString()}</span>
-                </div>
-              </div>
+              <PriceRow
+                title="MRP"
+                value={product.pricing?.mrp}
+              />
+
+              <PriceRow
+                title="Dealer Price"
+                value={
+                  product.pricing
+                    ?.dealerPrice
+                }
+              />
+
+              <PriceRow
+                title="Net Price"
+                value={
+                  product.pricing?.netPrice
+                }
+                highlight
+              />
+
+              <PriceRow
+                title="NLC"
+                value={product.pricing?.nlc}
+              />
             </div>
+          </div>
+
+          {/* SPECIFICATIONS */}
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                Specifications
+              </p>
+            </div>
+
+            <div className="p-5">
+              {product.specifications &&
+              Object.keys(
+                product.specifications
+              ).length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {Object.entries(
+                    product.specifications
+                  ).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex justify-between gap-4 py-3"
+                    >
+                      <span className="text-sm capitalize text-slate-500">
+                        {key}
+                      </span>
+
+                      <span className="text-sm font-bold text-slate-900 text-right">
+                        {String(
+                          value || "N/A"
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">
+                  No specifications.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* META */}
+
+          <div className="text-xs text-slate-400 space-y-1">
+            <p>
+              Created:{" "}
+              {product.createdAt
+                ? new Date(
+                    product.createdAt
+                  ).toLocaleString()
+                : "N/A"}
+            </p>
+
+            <p>
+              Updated:{" "}
+              {product.updatedAt
+                ? new Date(
+                    product.updatedAt
+                  ).toLocaleString()
+                : "N/A"}
+            </p>
           </div>
         </div>
 
-        {/* BOTTOM ACTION BAR */}
+        {/* FOOTER */}
+
         <div className="p-4 border-t border-slate-200 bg-white flex gap-3">
-          <button className="flex-1 flex justify-center items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 py-3 rounded-xl text-sm font-bold transition-colors">
-            <Trash2 size={16} /> Delete
+          <button
+            onClick={() =>
+              onStatusChange(product)
+            }
+            className={`flex-1 flex justify-center items-center gap-2 py-3 rounded-xl text-sm font-black transition ${
+              product.isActive
+                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            }`}
+          >
+            <Power size={16} />
+
+            {product.isActive
+              ? "Deactivate"
+              : "Activate"}
           </button>
-          <button className="flex-1 flex justify-center items-center gap-2 bg-surya-50 text-surya-600 hover:bg-surya-500 hover:text-white py-3 rounded-xl text-sm font-bold transition-all border border-surya-500/20">
-            <Edit2 size={16} /> Edit Product
+
+          <button
+            onClick={() =>
+              onEdit(product)
+            }
+            className="flex-1 flex justify-center items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 py-3 rounded-xl text-sm font-black transition"
+          >
+            <Edit2 size={16} />
+            Edit Product
           </button>
         </div>
       </div>
@@ -109,233 +374,1326 @@ const ProductSlideSheet = ({ product, onClose }) => {
   );
 };
 
-// --- MAIN APP COMPONENT ---
-export default function App() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Filtering States
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedSubcategory, setSelectedSubcategory] = useState('All');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+/* =========================================================
+   INFO CARD
+========================================================= */
 
-  // Pagination States
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+const InfoCard = ({
+  label,
+  value,
+  icon,
+}) => {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-orange-500 mb-2">
+        {icon}
 
-  // Load Excel File
+        <span className="text-[10px] uppercase tracking-widest font-black text-slate-400">
+          {label}
+        </span>
+      </div>
+
+      <p className="font-bold text-slate-800 text-sm">
+        {value}
+      </p>
+    </div>
+  );
+};
+
+/* =========================================================
+   PRICE ROW
+========================================================= */
+
+const PriceRow = ({
+  title,
+  value,
+  highlight,
+}) => {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-sm font-semibold text-slate-500">
+        {title}
+      </span>
+
+      <span
+        className={`font-black ${
+          highlight
+            ? "text-lg text-orange-600"
+            : "text-slate-900"
+        }`}
+      >
+        ₹{formatPrice(value)}
+      </span>
+    </div>
+  );
+};
+
+/* =========================================================
+   EDIT MODAL
+========================================================= */
+
+const EditProductModal = ({
+  product,
+  onClose,
+  onSaved,
+}) => {
+  const [saving, setSaving] =
+    useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    mrp: "",
+    dealerPrice: "",
+    netPrice: "",
+    nlc: "",
+    specifications: {},
+  });
+
   useEffect(() => {
-    const loadExcel = async () => {
+    if (!product) return;
+
+    setForm({
+      title: product.title || "",
+      mrp:
+        product.pricing?.mrp ?? "",
+      dealerPrice:
+        product.pricing?.dealerPrice ??
+        "",
+      netPrice:
+        product.pricing?.netPrice ??
+        "",
+      nlc:
+        product.pricing?.nlc ?? "",
+      specifications:
+        product.specifications || {},
+    });
+  }, [product]);
+
+  if (!product) return null;
+
+  const updateField = (
+    field,
+    value
+  ) => {
+    setForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const saveProduct = async () => {
+    try {
+      setSaving(true);
+
+      const response = await fetch(
+        `${API_BASE}/products/${product._id}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            title: form.title,
+
+            pricing: {
+              mrp:
+                Number(form.mrp) || 0,
+
+              dealerPrice:
+                Number(
+                  form.dealerPrice
+                ) || 0,
+
+              netPrice:
+                Number(
+                  form.netPrice
+                ) || 0,
+
+              nlc:
+                Number(form.nlc) || 0,
+            },
+
+            specifications:
+              form.specifications,
+          }),
+        }
+      );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message ||
+            "Unable to update product"
+        );
+      }
+
+      onSaved(result.data);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 backdrop-blur-sm px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-start">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-black text-orange-500">
+              Edit Product
+            </p>
+
+            <h3 className="font-black text-xl text-slate-900 mt-1">
+              {product.sku}
+            </h3>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-9 h-9 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800"
+          >
+            <X size={17} />
+          </button>
+        </div>
+
+        <div className="p-6 max-h-[70vh] overflow-y-auto space-y-5">
+          <Input
+            label="Product Title"
+            value={form.title}
+            onChange={(value) =>
+              updateField(
+                "title",
+                value
+              )
+            }
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="MRP"
+              type="number"
+              value={form.mrp}
+              onChange={(value) =>
+                updateField(
+                  "mrp",
+                  value
+                )
+              }
+            />
+
+            <Input
+              label="Dealer Price"
+              type="number"
+              value={
+                form.dealerPrice
+              }
+              onChange={(value) =>
+                updateField(
+                  "dealerPrice",
+                  value
+                )
+              }
+            />
+
+            <Input
+              label="Net Price"
+              type="number"
+              value={form.netPrice}
+              onChange={(value) =>
+                updateField(
+                  "netPrice",
+                  value
+                )
+              }
+            />
+
+            <Input
+              label="NLC"
+              type="number"
+              value={form.nlc}
+              onChange={(value) =>
+                updateField(
+                  "nlc",
+                  value
+                )
+              }
+            />
+          </div>
+
+          <Input
+            label="Capacity"
+            value={
+              form.specifications
+                ?.capacity || ""
+            }
+            onChange={(value) =>
+              setForm((previous) => ({
+                ...previous,
+
+                specifications: {
+                  ...previous.specifications,
+                  capacity: value,
+                },
+              }))
+            }
+          />
+        </div>
+
+        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={saving}
+            className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-600"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={saveProduct}
+            disabled={saving}
+            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center gap-2 disabled:opacity-60"
+          >
+            {saving ? (
+              <Loader2
+                size={16}
+                className="animate-spin"
+              />
+            ) : (
+              <Save size={16} />
+            )}
+
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Input = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+}) => {
+  return (
+    <label className="block">
+      <span className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">
+        {label}
+      </span>
+
+      <input
+        type={type}
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+      />
+    </label>
+  );
+};
+
+/* =========================================================
+   MAIN DASHBOARD
+========================================================= */
+
+export default function App() {
+  const [products, setProducts] =
+    useState([]);
+
+  const [pagination, setPagination] =
+    useState({
+      page: 1,
+      limit: 15,
+      totalItems: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [debouncedSearch, setDebouncedSearch] =
+    useState("");
+
+  const [brand, setBrand] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("");
+
+  const [subcategory, setSubcategory] =
+    useState("");
+
+  const [status, setStatus] =
+    useState("");
+
+  const [sort, setSort] =
+    useState("createdAt");
+
+  const [order, setOrder] =
+    useState("desc");
+
+  const [selectedProduct, setSelectedProduct] =
+    useState(null);
+
+  const [editingProduct, setEditingProduct] =
+    useState(null);
+
+  /* -----------------------------------------
+     SEARCH DEBOUNCE
+  ----------------------------------------- */
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPagination((previous) => ({
+        ...previous,
+        page: 1,
+      }));
+    }, 400);
+
+    return () =>
+      clearTimeout(timer);
+  }, [search]);
+
+  /* -----------------------------------------
+     LOAD PRODUCTS
+  ----------------------------------------- */
+
+  const loadProducts =
+    useCallback(async () => {
       try {
-        const response = await fetch('/Surya_Final_Master_With_Images.xlsx'); 
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = read(arrayBuffer, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const excelData = utils.sheet_to_json(workbook.Sheets[firstSheetName], { defval: "" });
-        
-        const cleanedData = excelData.filter(row => row.SKU || row.MODEL);
-        setData(cleanedData);
-      } catch (error) {
-        console.error("Error loading Excel:", error);
+        setLoading(true);
+        setError("");
+
+        const params =
+          new URLSearchParams();
+
+        params.set(
+          "page",
+          pagination.page
+        );
+
+        params.set(
+          "limit",
+          pagination.limit
+        );
+
+        params.set("sort", sort);
+        params.set("order", order);
+
+        if (debouncedSearch) {
+          params.set(
+            "search",
+            debouncedSearch
+          );
+        }
+
+        if (brand) {
+          params.set(
+            "brand",
+            brand
+          );
+        }
+
+        if (category) {
+          params.set(
+            "category",
+            category
+          );
+        }
+
+        if (subcategory) {
+          params.set(
+            "subcategory",
+            subcategory
+          );
+        }
+
+        if (status !== "") {
+          params.set(
+            "isActive",
+            status
+          );
+        }
+
+        const response = await fetch(
+          `${API_BASE}/products?${params.toString()}`
+        );
+
+        const result =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              "Unable to load products"
+          );
+        }
+
+        setProducts(result.data || []);
+
+        setPagination((previous) => ({
+          ...previous,
+          ...(result.pagination || {}),
+        }));
+      } catch (err) {
+        console.error(err);
+
+        setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
-    loadExcel();
-  }, []);
+    }, [
+      pagination.page,
+      pagination.limit,
+      debouncedSearch,
+      brand,
+      category,
+      subcategory,
+      status,
+      sort,
+      order,
+    ]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  /* -----------------------------------------
+     TEMP FILTER OPTIONS
+
+     Until dedicated Brand / Category APIs
+     are created, these are generated from
+     the loaded products.
+  ----------------------------------------- */
+
+  const brands = useMemo(() => {
+    const map = new Map();
+
+    products.forEach((product) => {
+      if (
+        product.brand?._id &&
+        product.brand?.name
+      ) {
+        map.set(
+          product.brand._id,
+          product.brand.name
+        );
+      }
+    });
+
+    return [...map.entries()];
+  }, [products]);
 
   const categories = useMemo(() => {
-    const cats = data.map(p => p.Category || p.PRODUCT).filter(Boolean);
-    return ['All', ...new Set(cats)];
-  }, [data]);
+    const map = new Map();
 
-  const subcategories = useMemo(() => {
-    const subcats = data
-      .filter(p => selectedCategory === 'All' || (p.Category || p.PRODUCT) === selectedCategory)
-      .map(p => p.Subcategory || p.SEGMENT)
-      .filter(Boolean);
-    return ['All', ...new Set(subcats)];
-  }, [data, selectedCategory]);
-
-  // Reset to page 1 whenever filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategory, selectedSubcategory]);
-
-  // Apply Search & Filters
-  const filteredData = useMemo(() => {
-    return data.filter(product => {
-      const sku = (product.SKU || product.MODEL || "").toLowerCase();
-      const title = (product.Title || "").toLowerCase();
-      const cat = product.Category || product.PRODUCT;
-      const subcat = product.Subcategory || product.SEGMENT;
-      
-      const matchesSearch = sku.includes(searchTerm.toLowerCase()) || title.includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || cat === selectedCategory;
-      const matchesSubcategory = selectedSubcategory === 'All' || subcat === selectedSubcategory;
-      
-      return matchesSearch && matchesCategory && matchesSubcategory;
+    products.forEach((product) => {
+      if (
+        product.category?._id &&
+        product.category?.name
+      ) {
+        map.set(
+          product.category._id,
+          product.category.name
+        );
+      }
     });
-  }, [searchTerm, selectedCategory, selectedSubcategory, data]);
 
-  // Calculate Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredData, currentPage]);
+    return [...map.entries()];
+  }, [products]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC]">
-        <Loader2 className="w-10 h-10 text-surya-500 animate-spin mb-4" />
-        <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Loading Excel Database...</p>
-      </div>
+  const subcategories =
+    useMemo(() => {
+      const map = new Map();
+
+      products.forEach((product) => {
+        if (
+          product.subcategory?._id &&
+          product.subcategory?.name
+        ) {
+          map.set(
+            product.subcategory._id,
+            product.subcategory.name
+          );
+        }
+      });
+
+      return [...map.entries()];
+    }, [products]);
+
+  /* -----------------------------------------
+     STATUS UPDATE
+  ----------------------------------------- */
+
+  const changeProductStatus =
+    async (product) => {
+      try {
+        const response = await fetch(
+          `${API_BASE}/products/${product._id}/status`,
+          {
+            method: "PATCH",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              isActive:
+                !product.isActive,
+            }),
+          }
+        );
+
+        const result =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              "Unable to update status"
+          );
+        }
+
+        setSelectedProduct(null);
+
+        await loadProducts();
+      } catch (error) {
+        alert(error.message);
+      }
+    };
+
+  /* -----------------------------------------
+     EDIT SAVED
+  ----------------------------------------- */
+
+  const handleProductSaved = (
+    updatedProduct
+  ) => {
+    setEditingProduct(null);
+
+    setSelectedProduct(
+      updatedProduct
     );
-  }
+
+    loadProducts();
+  };
+
+  /* -----------------------------------------
+     RESET FILTERS
+  ----------------------------------------- */
+
+  const resetFilters = () => {
+    setSearch("");
+    setBrand("");
+    setCategory("");
+    setSubcategory("");
+    setStatus("");
+
+    setPagination(
+      (previous) => ({
+        ...previous,
+        page: 1,
+      })
+    );
+  };
+
+  const startItem =
+    pagination.totalItems === 0
+      ? 0
+      : (pagination.page - 1) *
+          pagination.limit +
+        1;
+
+  const endItem = Math.min(
+    pagination.page *
+      pagination.limit,
+    pagination.totalItems
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC] font-sans h-screen overflow-hidden selection:bg-surya-500/30">
-      
-      <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/80 px-8 py-4 flex items-center justify-between shrink-0 z-10 sticky top-0">
-        <div className="flex items-center gap-5">
-          <img src="/Surya Logo file.png" alt="Surya" className="h-10 object-contain drop-shadow-sm" />
-          <div className="hidden md:flex flex-col border-l-2 border-slate-200 pl-5">
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">Data Center</h1>
-            <p className="text-[10px] text-surya-500 font-black uppercase tracking-widest mt-0.5">Inventory Master</p>
+    <div className="min-h-screen bg-[#F6F7F9] text-slate-900">
+      {/* HEADER */}
+
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-200">
+        <div className="px-6 lg:px-8 h-[74px] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <Package
+                className="text-white"
+                size={22}
+              />
+            </div>
+
+            <div>
+              <h1 className="font-black text-xl tracking-tight">
+                Surya Marketing
+              </h1>
+
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+                Product Management
+              </p>
+            </div>
           </div>
+
+          <button
+            onClick={loadProducts}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-600 hover:bg-slate-50"
+          >
+            <RefreshCw
+              size={15}
+              className={
+                loading
+                  ? "animate-spin"
+                  : ""
+              }
+            />
+
+            Refresh
+          </button>
         </div>
       </header>
 
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto flex flex-col space-y-6">
-        
-        {/* FILTER BAR */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 shrink-0 flex flex-wrap gap-4 items-center justify-between transition-all hover:shadow-md">
-          <div className="flex flex-wrap items-center gap-4 flex-1">
-            <div className="relative flex-1 min-w-[250px] max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
-              <input 
-                type="text" placeholder="Search by SKU or Title..." 
-                className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-surya-500 focus:ring-4 focus:ring-surya-500/10 text-sm font-medium transition-all"
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+      <main className="p-5 lg:p-8 max-w-[1700px] mx-auto space-y-6">
+        {/* STATS */}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label="Products"
+            value={
+              pagination.totalItems
+            }
+            icon={<Package size={20} />}
+          />
+
+          <StatCard
+            label="Current Page"
+            value={`${pagination.page} / ${pagination.totalPages}`}
+            icon={
+              <Layers size={20} />
+            }
+          />
+
+          <StatCard
+            label="Page Size"
+            value={pagination.limit}
+            icon={
+              <SlidersHorizontal
+                size={20}
+              />
+            }
+          />
+        </div>
+
+        {/* FILTERS */}
+
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <div className="flex flex-col xl:flex-row gap-3">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search
+                size={17}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                value={search}
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value
+                  )
+                }
+                placeholder="Search SKU or product title..."
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
               />
             </div>
-            <select 
-              className="py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-surya-500 focus:ring-4 focus:ring-surya-500/10 text-sm text-slate-700 font-bold cursor-pointer transition-all min-w-[150px]"
-              value={selectedCategory} 
-              onChange={(e) => { setSelectedCategory(e.target.value); setSelectedSubcategory('All'); }}
+
+            <FilterSelect
+              value={brand}
+              onChange={(value) => {
+                setBrand(value);
+
+                setPagination(
+                  (previous) => ({
+                    ...previous,
+                    page: 1,
+                  })
+                );
+              }}
+              label="All Brands"
+              items={brands}
+            />
+
+            <FilterSelect
+              value={category}
+              onChange={(value) => {
+                setCategory(value);
+                setSubcategory("");
+
+                setPagination(
+                  (previous) => ({
+                    ...previous,
+                    page: 1,
+                  })
+                );
+              }}
+              label="All Categories"
+              items={categories}
+            />
+
+            <FilterSelect
+              value={subcategory}
+              onChange={(value) => {
+                setSubcategory(value);
+
+                setPagination(
+                  (previous) => ({
+                    ...previous,
+                    page: 1,
+                  })
+                );
+              }}
+              label="All Subcategories"
+              items={subcategories}
+            />
+
+            <select
+              value={status}
+              onChange={(event) => {
+                setStatus(
+                  event.target.value
+                );
+
+                setPagination(
+                  (previous) => ({
+                    ...previous,
+                    page: 1,
+                  })
+                );
+              }}
+              className="px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold outline-none"
             >
-              {categories.map(cat => <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>)}
+              <option value="">
+                All Status
+              </option>
+
+              <option value="true">
+                Active
+              </option>
+
+              <option value="false">
+                Inactive
+              </option>
             </select>
-            <select 
-              className="py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-surya-500 focus:ring-4 focus:ring-surya-500/10 text-sm text-slate-700 font-bold cursor-pointer transition-all min-w-[150px]"
-              value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)}
-              disabled={selectedCategory === 'All' && subcategories.length <= 1}
+
+            <button
+              onClick={resetFilters}
+              className="px-4 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50"
             >
-              {subcategories.map(sub => <option key={sub} value={sub}>{sub === 'All' ? 'All Sub-Groups' : sub}</option>)}
+              Reset
+            </button>
+          </div>
+
+          {/* SORT BAR */}
+
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
+            <select
+              value={sort}
+              onChange={(event) =>
+                setSort(
+                  event.target.value
+                )
+              }
+              className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+            >
+              <option value="createdAt">
+                Date Created
+              </option>
+
+              <option value="updatedAt">
+                Last Updated
+              </option>
+
+              <option value="title">
+                Product Title
+              </option>
+
+              <option value="sku">
+                SKU
+              </option>
+
+              <option value="pricing.mrp">
+                MRP
+              </option>
+
+              <option value="pricing.netPrice">
+                Net Price
+              </option>
+            </select>
+
+            <select
+              value={order}
+              onChange={(event) =>
+                setOrder(
+                  event.target.value
+                )
+              }
+              className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+            >
+              <option value="desc">
+                Descending
+              </option>
+
+              <option value="asc">
+                Ascending
+              </option>
+            </select>
+
+            <select
+              value={pagination.limit}
+              onChange={(event) =>
+                setPagination(
+                  (previous) => ({
+                    ...previous,
+                    page: 1,
+                    limit: Number(
+                      event.target.value
+                    ),
+                  })
+                )
+              }
+              className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-bold"
+            >
+              <option value={10}>
+                10 / page
+              </option>
+
+              <option value={15}>
+                15 / page
+              </option>
+
+              <option value={25}>
+                25 / page
+              </option>
+
+              <option value={50}>
+                50 / page
+              </option>
             </select>
           </div>
         </div>
 
-        {/* MODERN TABLE WITH PAGINATION */}
-        <div className="flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden flex-1 min-h-[500px]">
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="py-4 px-6 w-10"><input type="checkbox" className="rounded text-surya-500 focus:ring-surya-500" /></th>
-                  <th className="py-4 px-4 text-[11px] font-black text-slate-500 uppercase tracking-wider">SKU No</th>
-                  <th className="py-4 px-4 text-[11px] font-black text-slate-500 uppercase tracking-wider">Brand</th>
-                  <th className="py-4 px-4 text-[11px] font-black text-slate-500 uppercase tracking-wider">Product Group</th>
-                  <th className="py-4 px-4 text-[11px] font-black text-slate-500 uppercase tracking-wider">Sub Group</th>
-                  <th className="py-4 px-4 text-[11px] font-black text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="py-4 px-6 text-[11px] font-black text-slate-500 uppercase tracking-wider text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {paginatedData.map((product, idx) => {
-                  const sku = product.SKU || product.MODEL || 'N/A';
-                  const brand = product.Brand || 'LG';
-                  const cat = product.Category || product.PRODUCT || 'N/A';
-                  const subcat = product.Subcategory || product.SEGMENT || 'N/A';
-                  const status = product.Status || 'Approved';
-                  const thumb = product['Thumbnail URL'] || "https://placehold.co/100x100?text=No+Img";
+        {/* TABLE */}
 
-                  return (
-                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors group">
-                      <td className="py-3 px-6"><input type="checkbox" className="rounded text-surya-500 focus:ring-surya-500 border-slate-300" /></td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <img src={thumb} alt="sku" className="w-10 h-10 rounded border border-slate-200 object-contain p-0.5 bg-white mix-blend-multiply" />
-                          <span className="font-bold text-slate-800 text-sm group-hover:text-surya-600 transition-colors">{sku}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-sm font-semibold text-slate-600">{brand}</td>
-                      <td className="py-3 px-4 text-sm font-semibold text-slate-600">{cat}</td>
-                      <td className="py-3 px-4 text-sm font-semibold text-slate-600">{subcat}</td>
-                      <td className="py-3 px-4">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
-                          status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
-                        }`}>
-                          {status === 'Approved' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                          {status}
-                        </div>
-                      </td>
-                      <td className="py-3 px-6 text-right">
-                        <button 
-                          onClick={() => setSelectedProduct(product)}
-                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 font-bold text-xs hover:border-surya-500 hover:text-surya-600 shadow-sm transition-all"
-                        >
-                          View <ChevronRight size={14} />
-                        </button>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {error ? (
+            <div className="py-20 text-center">
+              <XCircle
+                size={42}
+                className="mx-auto text-red-400 mb-3"
+              />
+
+              <p className="font-black text-slate-800">
+                Unable to load products
+              </p>
+
+              <p className="text-sm text-slate-500 mt-1">
+                {error}
+              </p>
+            </div>
+          ) : loading ? (
+            <div className="py-24 flex flex-col items-center">
+              <Loader2 className="w-9 h-9 animate-spin text-orange-500" />
+
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-4">
+                Loading Products
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <TableHead>
+                      Product
+                    </TableHead>
+
+                    <TableHead>
+                      Brand
+                    </TableHead>
+
+                    <TableHead>
+                      Category
+                    </TableHead>
+
+                    <TableHead>
+                      Subcategory
+                    </TableHead>
+
+                    <TableHead>
+                      Net Price
+                    </TableHead>
+
+                    <TableHead>
+                      Status
+                    </TableHead>
+
+                    <TableHead align="right">
+                      Action
+                    </TableHead>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100">
+                  {products.map(
+                    (product) => (
+                      <tr
+                        key={product._id}
+                        className="hover:bg-slate-50/70 transition"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3 min-w-[250px]">
+                            <div className="w-12 h-12 border border-slate-200 rounded-xl bg-white flex items-center justify-center overflow-hidden">
+                              {product
+                                .thumbnail
+                                ?.url ? (
+                                <img
+                                  src={
+                                    product
+                                      .thumbnail
+                                      .url
+                                  }
+                                  alt={
+                                    product.sku
+                                  }
+                                  className="w-full h-full object-contain p-1"
+                                />
+                              ) : (
+                                <ImageIcon
+                                  size={18}
+                                  className="text-slate-300"
+                                />
+                              )}
+                            </div>
+
+                            <div>
+                              <p className="font-black text-sm text-slate-900">
+                                {
+                                  product.sku
+                                }
+                              </p>
+
+                              <p className="text-xs text-slate-500 mt-1 line-clamp-1 max-w-[280px]">
+                                {
+                                  product.title
+                                }
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+                        <TableCell>
+                          {getRelationName(
+                            product.brand
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {getRelationName(
+                            product.category
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          {getRelationName(
+                            product.subcategory
+                          )}
+                        </TableCell>
+
+                        <td className="px-4 py-4">
+                          <span className="inline-flex items-center font-black text-sm text-slate-900">
+                            <IndianRupee
+                              size={13}
+                            />
+
+                            {formatPrice(
+                              product
+                                .pricing
+                                ?.netPrice
+                            )}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <StatusBadge
+                            active={
+                              product.isActive
+                            }
+                          />
+                        </td>
+
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() =>
+                              setSelectedProduct(
+                                product
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 text-xs font-black text-slate-600 hover:border-orange-400 hover:text-orange-600 bg-white"
+                          >
+                            View
+                            <ChevronRight
+                              size={14}
+                            />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  )}
+
+                  {products.length ===
+                    0 && (
+                    <tr>
+                      <td
+                        colSpan="7"
+                        className="py-20 text-center"
+                      >
+                        <Package
+                          size={42}
+                          className="mx-auto text-slate-300 mb-3"
+                        />
+
+                        <p className="font-bold text-slate-500">
+                          No products
+                          found
+                        </p>
                       </td>
                     </tr>
-                  );
-                })}
-                {paginatedData.length === 0 && (
-                  <tr>
-                    <td colSpan="7" className="py-16 text-center text-slate-500 font-semibold">No products found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* PAGINATION CONTROLS */}
-          {filteredData.length > 0 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50/50 shrink-0">
-              <div className="text-xs font-semibold text-slate-500">
-                Showing <span className="font-bold text-slate-800">{((currentPage - 1) * itemsPerPage) + 1}</span> to <span className="font-bold text-slate-800">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-bold text-slate-800">{filteredData.length}</span> entries
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-40 hover:bg-slate-50 hover:text-surya-600 transition-colors shadow-sm"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                
-                <span className="text-xs font-bold text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
-                
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-40 hover:bg-slate-50 hover:text-surya-600 transition-colors shadow-sm"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
+
+          {/* PAGINATION */}
+
+          {!loading &&
+            !error &&
+            pagination.totalItems >
+              0 && (
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between px-6 py-4 border-t border-slate-200 bg-slate-50/50">
+                <p className="text-xs font-semibold text-slate-500">
+                  Showing{" "}
+                  <strong className="text-slate-900">
+                    {startItem}
+                  </strong>{" "}
+                  –{" "}
+                  <strong className="text-slate-900">
+                    {endItem}
+                  </strong>{" "}
+                  of{" "}
+                  <strong className="text-slate-900">
+                    {
+                      pagination.totalItems
+                    }
+                  </strong>{" "}
+                  products
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={
+                      !pagination.hasPreviousPage
+                    }
+                    onClick={() =>
+                      setPagination(
+                        (previous) => ({
+                          ...previous,
+                          page:
+                            previous.page -
+                            1,
+                        })
+                      )
+                    }
+                    className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30"
+                  >
+                    <ChevronLeft
+                      size={16}
+                    />
+                  </button>
+
+                  <span className="px-4 py-2 text-xs font-black bg-white rounded-lg border border-slate-200">
+                    Page{" "}
+                    {pagination.page} of{" "}
+                    {pagination.totalPages}
+                  </span>
+
+                  <button
+                    disabled={
+                      !pagination.hasNextPage
+                    }
+                    onClick={() =>
+                      setPagination(
+                        (previous) => ({
+                          ...previous,
+                          page:
+                            previous.page +
+                            1,
+                        })
+                      )
+                    }
+                    className="w-9 h-9 rounded-lg border border-slate-200 bg-white flex items-center justify-center disabled:opacity-30"
+                  >
+                    <ChevronRight
+                      size={16}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
         </div>
       </main>
 
-      {selectedProduct && <ProductSlideSheet product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      {/* PRODUCT DRAWER */}
+
+      {selectedProduct && (
+        <ProductSlideSheet
+          product={selectedProduct}
+          onClose={() =>
+            setSelectedProduct(null)
+          }
+          onEdit={(product) =>
+            setEditingProduct(product)
+          }
+          onStatusChange={
+            changeProductStatus
+          }
+        />
+      )}
+
+      {/* EDIT PRODUCT */}
+
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() =>
+            setEditingProduct(null)
+          }
+          onSaved={
+            handleProductSaved
+          }
+        />
+      )}
     </div>
   );
 }
+
+/* =========================================================
+   SMALL UI COMPONENTS
+========================================================= */
+
+const TableHead = ({
+  children,
+  align,
+}) => {
+  return (
+    <th
+      className={`px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 ${
+        align === "right"
+          ? "text-right"
+          : ""
+      }`}
+    >
+      {children}
+    </th>
+  );
+};
+
+const TableCell = ({
+  children,
+}) => {
+  return (
+    <td className="px-4 py-4 text-sm font-semibold text-slate-600">
+      {children}
+    </td>
+  );
+};
+
+const StatCard = ({
+  label,
+  value,
+  icon,
+}) => {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex items-center gap-4">
+      <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+        {icon}
+      </div>
+
+      <div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          {label}
+        </p>
+
+        <p className="text-xl font-black text-slate-900 mt-1">
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const FilterSelect = ({
+  value,
+  onChange,
+  label,
+  items,
+}) => {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        className="appearance-none min-w-[165px] px-4 pr-9 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-600 outline-none"
+      >
+        <option value="">
+          {label}
+        </option>
+
+        {items.map(
+          ([id, name]) => (
+            <option
+              key={id}
+              value={id}
+            >
+              {name}
+            </option>
+          )
+        )}
+      </select>
+
+      <ChevronDown
+        size={14}
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+      />
+    </div>
+  );
+};
