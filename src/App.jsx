@@ -12,6 +12,7 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 import ProductsPage from "./pages/ProductsPage";
 import UsersPage from "./pages/UsersPage";
 import DealerRequestsPage from "./pages/DealerRequestsPage";
+import OrdersPage from './pages/Orders';
 
 const OverviewPage = () => {
   return (
@@ -63,6 +64,11 @@ export default function App() {
           <Route
             path="/dealer-requests"
             element={<DealerRequestsPage />}
+          />
+
+          <Route
+            path="/orders"
+            element={<OrdersPage />}
           />
 
           <Route

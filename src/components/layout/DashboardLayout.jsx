@@ -44,7 +44,6 @@ const MENU = [
         name: "Orders",
         path: "/orders",
         icon: ShoppingCart,
-        disabled: true,
     },
     {
         name: "Payments",
