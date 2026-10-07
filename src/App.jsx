@@ -13,6 +13,7 @@ import ProductsPage from "./pages/ProductsPage";
 import UsersPage from "./pages/UsersPage";
 import DealerRequestsPage from "./pages/DealerRequestsPage";
 import OrdersPage from './pages/Orders';
+import NotificationsPage from './pages/NotificationsPage';
 
 const OverviewPage = () => {
   return (
@@ -78,6 +79,13 @@ export default function App() {
                 to="/"
                 replace
               />
+            }
+          />
+
+          <Route
+            path="/notifications"
+            element={
+              <NotificationsPage />
             }
           />
         </Route>

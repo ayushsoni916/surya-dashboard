@@ -12,6 +12,7 @@ import {
     PanelLeftOpen,
     ChevronRight,
     ClipboardList,
+    Bell,
 } from "lucide-react";
 
 import {
@@ -44,6 +45,11 @@ const MENU = [
         name: "Orders",
         path: "/orders",
         icon: ShoppingCart,
+    },
+    {
+        name: 'Notifications',
+        path: '/notifications',
+        icon: Bell
     },
     {
         name: "Payments",
