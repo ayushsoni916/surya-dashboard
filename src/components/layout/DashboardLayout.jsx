@@ -13,6 +13,8 @@ import {
     ChevronRight,
     ClipboardList,
     Bell,
+    Gift,
+    Store,
 } from "lucide-react";
 
 import {
@@ -45,6 +47,16 @@ const MENU = [
         name: "Orders",
         path: "/orders",
         icon: ShoppingCart,
+    },
+    {
+        name: "Gift Management",
+        path: "/gifts",
+        icon: Gift,
+    },
+    {
+        name: "Dealer Gift Inventory",
+        path: "/dealer-gifts",
+        icon: Store,
     },
     {
         name: 'Notifications',

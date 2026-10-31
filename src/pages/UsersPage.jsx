@@ -74,6 +74,26 @@ export default function UsersPage() {
         useState(false);
 
     const [selectedUser, setSelectedUser] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
+
+    const [filters, setFilters] = useState({});
+
+    const changeFilter = (key, value) => {
+        setFilters((prev) => ({
+            ...prev,
+            [key]: value,
+            ...(key === "teamLeader" ? { salesman: "" } : {}),
+            ...(key === "district" ? { city: "" } : {}),
+        }));
+    };
+
+    const refId = (value) =>
+        String(value?._id || value || "");
+
+    const optionsFrom = (values) =>
+        [...new Set(values.filter(Boolean))]
+            .sort((a, b) => String(a).localeCompare(String(b)))
+            .map((value) => [value, value]);
 
     const loadUsers =
         useCallback(async () => {
@@ -133,71 +153,160 @@ export default function UsersPage() {
         loadUsers();
     }, [loadUsers]);
 
-    const currentData =
-        useMemo(() => {
-            let data = [];
+    const currentData = useMemo(() => {
+        const data =
+            activeTab === "ho"
+                ? hoUsers
+                : activeTab === "salesmen"
+                    ? salesmen
+                    : dealers;
 
-            if (activeTab === "ho") {
-                data = hoUsers;
-            }
+        const query = search.trim().toLowerCase();
 
-            if (
-                activeTab === "salesmen"
-            ) {
-                data = salesmen;
-            }
-
-            if (
+        return data.filter((item) => {
+            // COMMON STATUS
+            const status =
                 activeTab === "dealers"
-            ) {
-                data = dealers;
+                    ? item.status
+                    : item.isActive
+                        ? "active"
+                        : "inactive";
+
+            if (filters.status && status !== filters.status)
+                return false;
+
+            // HEAD OFFICE
+            if (activeTab === "ho") {
+                if (filters.role && item.role !== filters.role)
+                    return false;
+
+                if (
+                    filters.department &&
+                    item.department !== filters.department
+                )
+                    return false;
             }
 
-            if (!search.trim()) {
-                return data;
+            // SALESMEN
+            if (activeTab === "salesmen") {
+                if (
+                    filters.teamLeader &&
+                    refId(item.teamLeader) !== filters.teamLeader
+                )
+                    return false;
             }
 
-            const value =
-                search.toLowerCase();
+            // DEALERS
+            if (activeTab === "dealers") {
+                if (
+                    filters.teamLeader &&
+                    refId(item.teamLeader) !== filters.teamLeader
+                )
+                    return false;
 
-            return data.filter(
-                (item) => {
-                    const name =
-                        item.name ||
-                        item.dealerName ||
-                        "";
+                if (
+                    filters.salesman &&
+                    refId(item.salesman) !== filters.salesman
+                )
+                    return false;
 
-                    const mobile =
-                        item.mobile ||
-                        item.contact
-                            ?.mobileNumber ||
-                        "";
+                if (
+                    filters.district &&
+                    item.address?.district !== filters.district
+                )
+                    return false;
 
-                    const email =
-                        item.email ||
-                        item.contact?.email ||
-                        "";
+                if (
+                    filters.city &&
+                    item.address?.city !== filters.city
+                )
+                    return false;
 
-                    return (
-                        name
-                            .toLowerCase()
-                            .includes(value) ||
-                        mobile
-                            .toLowerCase()
-                            .includes(value) ||
-                        email
-                            .toLowerCase()
-                            .includes(value)
-                    );
-                }
-            );
-        }, [
-            activeTab,
-            hoUsers,
-            salesmen,
-            dealers,
-            search,
-        ]);
+                if (
+                    filters.category &&
+                    item.dealerCategory !== filters.category
+                )
+                    return false;
+            }
+
+            // SEARCH
+            if (query) {
+                const searchable = [
+                    item.name,
+                    item.dealerName,
+                    item.mobile,
+                    item.email,
+                    item.employeeCode,
+                    item.contact?.mobileNumber,
+                    item.contact?.email,
+                    item.address?.city,
+                    item.address?.district,
+                    item.tax?.gstNumber,
+                    item.gtmCode,
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
+
+                if (!searchable.includes(query))
+                    return false;
+            }
+
+            return true;
+        });
+    }, [activeTab, hoUsers, salesmen, dealers, filters, search]);
+
+    const statusOptions = [
+        ["active", "Active"],
+        ["inactive", "Inactive"],
+    ];
+
+    const leaderOptions = hoUsers
+        .filter((u) => u.role === "teamLeader")
+        .map((u) => [u._id, u.name]);
+
+    const salesmanOptions = salesmen
+        .filter(
+            (s) =>
+                !filters.teamLeader ||
+                refId(s.teamLeader) === filters.teamLeader
+        )
+        .map((s) => [s._id, s.name]);
+
+    const districtOptions = optionsFrom(
+        dealers.map((d) => d.address?.district)
+    );
+
+    const cityOptions = optionsFrom(
+        dealers
+            .filter(
+                (d) =>
+                    !filters.district ||
+                    d.address?.district === filters.district
+            )
+            .map((d) => d.address?.city)
+    );
+
+    const filterConfig =
+        activeTab === "ho"
+            ? [
+                ["role", "Role", optionsFrom(hoUsers.map(u => u.role))],
+                ["department", "Department", optionsFrom(hoUsers.map(u => u.department))],
+                ["status", "Status", statusOptions],
+            ]
+            : activeTab === "salesmen"
+                ? [
+                    ["teamLeader", "Team Leader", leaderOptions],
+                    ["status", "Status", statusOptions],
+                ]
+                : [
+                    ["teamLeader", "Team Leader", leaderOptions],
+                    ["salesman", "Salesman", salesmanOptions],
+                    ["district", "District", districtOptions],
+                    ["city", "City / Station", cityOptions],
+                    ["category", "Category", optionsFrom(dealers.map(d => d.dealerCategory))],
+                    ["status", "Status", statusOptions],
+                ];
 
     return (
         <div className="min-h-screen">
@@ -289,6 +398,7 @@ export default function UsersPage() {
                                             );
 
                                             setSearch("");
+                                            setFilters({});
                                         }}
                                         className={`flex items-center gap-2 pb-4 border-b-2 text-sm font-bold transition ${selected
                                             ? "border-orange-500 text-orange-600"
@@ -334,9 +444,56 @@ export default function UsersPage() {
                                         event.target.value
                                     )
                                 }
-                                placeholder="Search by name, mobile or email..."
+                                placeholder="Search by name, mobile, GTM code..."
                                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold outline-none focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                             />
+                        </div>
+                    </div>
+
+                    {/* FILTERS */}
+
+                    <div className="px-5 pb-5 border-b border-slate-100">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-slate-700">
+                                    Filters
+                                </span>
+
+                                <span className="text-[11px] font-semibold text-slate-400">
+                                    {currentData.length} results
+                                </span>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setFilters({});
+                                    setSearch("");
+                                }}
+                                className="text-xs font-bold text-orange-600 hover:text-orange-700"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                            {filterConfig.map(([key, label, options]) => (
+                                <select
+                                    key={key}
+                                    value={filters[key] || ""}
+                                    onChange={(e) =>
+                                        changeFilter(key, e.target.value)
+                                    }
+                                    className="min-w-[150px] max-w-[220px] px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 outline-none focus:border-orange-500"
+                                >
+                                    <option value="">All {label}</option>
+
+                                    {options.map(([value, text]) => (
+                                        <option key={value} value={value}>
+                                            {text}
+                                        </option>
+                                    ))}
+                                </select>
+                            ))}
                         </div>
                     </div>
 
@@ -380,16 +537,19 @@ export default function UsersPage() {
                 </div>
             </main>
 
-            {showCreate && (
+            {(showCreate || editingUser) && (
                 <CreateUserModal
                     type={activeTab}
                     hoUsers={hoUsers}
                     salesmen={salesmen}
-                    onClose={() =>
-                        setShowCreate(false)
-                    }
+                    editUser={editingUser}
+                    onClose={() => {
+                        setShowCreate(false);
+                        setEditingUser(null);
+                    }}
                     onCreated={() => {
                         setShowCreate(false);
+                        setEditingUser(null);
                         loadUsers();
                     }}
                 />
@@ -400,6 +560,10 @@ export default function UsersPage() {
                     type={activeTab}
                     user={selectedUser}
                     onClose={() => setSelectedUser(null)}
+                    onEdit={(user) => {
+                        setSelectedUser(null);
+                        setEditingUser(user);
+                    }}
                 />
             )}
         </div>
@@ -545,6 +709,7 @@ const DealersTable = ({ users, onView }) => {
             <thead>
                 <TableHeader>
                     <TH>Dealer</TH>
+                    <TH>GTM Code</TH>
                     <TH>Location</TH>
                     <TH>Salesman</TH>
                     <TH>Team Leader</TH>
@@ -574,6 +739,11 @@ const DealersTable = ({ users, onView }) => {
                                     ?.mobileNumber
                             }
                         />
+                        <TD>
+                            <span className="inline-flex px-3 py-1.5 rounded-lg bg-orange-50 text-orange-700 text-xs font-black tracking-wide">
+                                {dealer.gtmCode || "—"}
+                            </span>
+                        </TD>
 
                         <TD>
                             <div className="flex items-center gap-1.5">
@@ -636,12 +806,72 @@ const CreateUserModal = ({
     salesmen,
     onClose,
     onCreated,
+    editUser = null,
 }) => {
     const [saving, setSaving] =
         useState(false);
 
-    const [form, setForm] =
-        useState({});
+
+    const [form, setForm] = useState(() => {
+        if (!editUser) return {};
+
+        if (type === "salesmen") {
+            return {
+                name: editUser.name || "",
+                employeeCode: editUser.employeeCode || "",
+                mobile: editUser.mobile || "",
+                email: editUser.email || "",
+                // isActive: form.isActive ?? true,
+                teamLeader:
+                    editUser.teamLeader?._id ||
+                    editUser.teamLeader ||
+                    "",
+                isActive: editUser.isActive ?? true,
+            };
+        }
+
+        if (type === "dealers") {
+            return {
+                dealerName: editUser.dealerName || "",
+                proprietorNames: editUser.proprietorNames || "",
+                contactPerson: editUser.contactPerson || "",
+                // status: form.status || "active",
+                // whatsappNumber: form.whatsapp || form.mobile || "",
+                whatsappNumber: form.whatsapp || "",
+                salesman:
+                    editUser.salesman?._id ||
+                    editUser.salesman ||
+                    "",
+                gtmCode: editUser.gtmCode || "",
+                mobile: editUser.contact?.mobileNumber || "",
+                whatsapp: editUser.contact?.whatsappNumber || "",
+                email: editUser.contact?.email || "",
+                phone: editUser.contact?.phoneNumber || "",
+                address: editUser.address?.dealerAddress || "",
+                city: editUser.address?.city || "",
+                district: editUser.address?.district || "",
+                state: editUser.address?.state || "",
+                pincode: editUser.address?.pincode || "",
+                panNumber: editUser.tax?.panNumber || "",
+                gstNumber: editUser.tax?.gstNumber || "",
+                dealerCategory: editUser.dealerCategory || "",
+                creditLimit: editUser.creditLimit ?? 0,
+                brandMapping:
+                    (editUser.brandMapping || []).join(", "),
+                status: editUser.status || "active",
+            };
+        }
+
+        return {
+            name: editUser.name || "",
+            mobile: editUser.mobile || "",
+            email: editUser.email || "",
+            role: editUser.role || "teamLeader",
+            department: editUser.department || "sales",
+            isActive: editUser.isActive ?? true,
+        };
+    });
+
 
     const update = (
         key,
@@ -666,6 +896,7 @@ const CreateUserModal = ({
                         "/ho-users";
 
                     body = {
+                        isActive: form.isActive ?? true,
                         name: form.name,
                         mobile:
                             form.mobile || "",
@@ -724,6 +955,10 @@ const CreateUserModal = ({
                         contactPerson:
                             form.contactPerson ||
                             "",
+
+                        ...(form.gtmCode?.trim()
+                            ? { gtmCode: form.gtmCode.trim().toUpperCase() }
+                            : {}),
 
                         salesman:
                             form.salesman,
@@ -803,7 +1038,7 @@ const CreateUserModal = ({
                                     .filter(Boolean)
                                 : [],
 
-                        status: "active",
+                        status: form.status || "active",
 
                         login: {
                             mobile:
@@ -818,9 +1053,9 @@ const CreateUserModal = ({
 
                 const response =
                     await fetch(
-                        `${API_BASE}${endpoint}`,
+                        `${API_BASE}${endpoint}${editUser ? `/${editUser._id}` : ""}`,
                         {
-                            method: "POST",
+                            method: editUser ? "PUT" : "POST",
 
                             headers: {
                                 "Content-Type":
@@ -929,7 +1164,7 @@ const CreateUserModal = ({
                             />
                         )}
 
-                        Create User
+                        {editUser ? "Save Changes" : "Create User"}
                     </button>
                 </div>
             </div>
@@ -1015,6 +1250,17 @@ const HOForm = ({
             }
             placeholder="Sales"
         />
+        <Select
+            label="Status"
+            value={String(form.isActive ?? true)}
+            onChange={(value) =>
+                update("isActive", value === "true")
+            }
+            options={[
+                ["true", "Active"],
+                ["false", "Inactive"],
+            ]}
+        />
     </div>
 );
 
@@ -1083,6 +1329,15 @@ const SalesmanForm = ({
                     user.name,
                 ])}
         />
+        <Select
+            label="Status"
+            value={String(form.isActive ?? true)}
+            onChange={(v) => update("isActive", v === "true")}
+            options={[
+                ["true", "Active"],
+                ["false", "Inactive"],
+            ]}
+        />
     </div>
 );
 
@@ -1103,6 +1358,14 @@ const DealerForm = ({
                         "dealerName",
                         v
                     )
+                }
+            />
+            <Field
+                label="GTM Code"
+                value={form.gtmCode}
+                placeholder="Enter GTM Code"
+                onChange={(v) =>
+                    update("gtmCode", v.toUpperCase())
                 }
             />
 
@@ -1218,6 +1481,11 @@ const DealerForm = ({
                     )
                 }
             />
+            <Field
+                label="State"
+                value={form.state}
+                onChange={(v) => update("state", v)}
+            />
 
             <Field
                 label="Pincode"
@@ -1299,6 +1567,15 @@ const DealerForm = ({
                         v
                     )
                 }
+            />
+            <Select
+                label="Status"
+                value={form.status || "active"}
+                onChange={(v) => update("status", v)}
+                options={[
+                    ["active", "Active"],
+                    ["inactive", "Inactive"],
+                ]}
             />
         </FormSection>
     </div>
@@ -1528,6 +1805,7 @@ const UserDetailsDrawer = ({
     user,
     type,
     onClose,
+    onEdit
 }) => {
     if (!user) return null;
 
@@ -1553,6 +1831,7 @@ const UserDetailsDrawer = ({
     const active = isDealer
         ? user.status === "active"
         : user.isActive;
+
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-950/30 backdrop-blur-[2px] flex justify-end">
@@ -1785,6 +2064,10 @@ const UserDetailsDrawer = ({
                                         value={
                                             user.dealerName
                                         }
+                                    />
+                                    <DetailItem
+                                        label="GTM Code"
+                                        value={user.gtmCode}
                                     />
 
                                     <DetailItem
@@ -2183,9 +2466,9 @@ const UserDetailsDrawer = ({
 
                     <div className="flex gap-2">
                         <button
-                            disabled
-                            title="Update API will be added next"
-                            className="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-400 text-sm font-bold cursor-not-allowed"
+
+                            onClick={() => onEdit(user)}
+                            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold disabled:opacity-40"
                         >
                             Edit
                         </button>

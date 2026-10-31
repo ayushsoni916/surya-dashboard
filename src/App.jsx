@@ -14,6 +14,8 @@ import UsersPage from "./pages/UsersPage";
 import DealerRequestsPage from "./pages/DealerRequestsPage";
 import OrdersPage from './pages/Orders';
 import NotificationsPage from './pages/NotificationsPage';
+import GiftCatalogPage from "./pages/GiftCatalogPage";
+import DealerGiftInventoryPage from "./pages/DealerGiftInventoryPage";
 
 const OverviewPage = () => {
   return (
@@ -70,6 +72,14 @@ export default function App() {
           <Route
             path="/orders"
             element={<OrdersPage />}
+          />
+          <Route
+            path="gifts"
+            element={<GiftCatalogPage />}
+          />
+          <Route
+            path="dealer-gifts"
+            element={<DealerGiftInventoryPage />}
           />
 
           <Route

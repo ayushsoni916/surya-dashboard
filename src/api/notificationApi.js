@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5001/api';
+const API_BASE = 'http://78.159.126.218/api';
 
 
 export const sendPushNotification =
