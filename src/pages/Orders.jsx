@@ -130,6 +130,22 @@ const getDealerContact =
         );
     };
 
+const getSalesmanName = order => {
+    const salesman =
+        order?.salesman?.name
+            ? order.salesman
+            : order?.dealer?.salesman;
+
+    return salesman?.name || "Not Assigned";
+};
+
+const getTeamLeaderName = order => {
+    return (
+        order?.dealer?.teamLeader?.name ||
+        "Not Assigned"
+    );
+};
+
 
 const getTotalQuantity =
     order => {
@@ -798,6 +814,9 @@ export default function OrdersPage() {
                                             Dealer
                                         </TH>
 
+                                        <TH>Salesman</TH>
+                                        <TH>Team Leader</TH>
+
                                         <TH>
                                             Items
                                         </TH>
@@ -890,6 +909,20 @@ export default function OrdersPage() {
                                                             )}
                                                     </div>
                                                 </td>
+
+                                                {/* SALESMAN */}
+                                                <TD>
+                                                    <p className="font-semibold text-slate-800">
+                                                        {getSalesmanName(order)}
+                                                    </p>
+                                                </TD>
+
+                                                {/* TEAM LEADER */}
+                                                <TD>
+                                                    <p className="font-semibold text-slate-800">
+                                                        {getTeamLeaderName(order)}
+                                                    </p>
+                                                </TD>
 
 
                                                 {/* ITEMS */}
@@ -1467,6 +1500,15 @@ const OrderDrawer = ({
                                     ) ||
                                     "N/A"
                                 }
+                            />
+                            <DetailItem
+                                label="Salesman"
+                                value={getSalesmanName(order)}
+                            />
+
+                            <DetailItem
+                                label="Team Leader"
+                                value={getTeamLeaderName(order)}
                             />
                         </DetailGrid>
                     </DetailSection>

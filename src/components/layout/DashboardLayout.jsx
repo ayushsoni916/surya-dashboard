@@ -63,12 +63,15 @@ const MENU = [
         path: '/notifications',
         icon: Bell
     },
+    { name: "Reward Orders", path: "/scratch-orders", icon: Gift },
     {
         name: "Payments",
         path: "/payments",
         icon: Wallet,
         disabled: true,
     },
+
+
 ];
 
 export default function DashboardLayout() {

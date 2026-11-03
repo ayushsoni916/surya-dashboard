@@ -16,6 +16,7 @@ import OrdersPage from './pages/Orders';
 import NotificationsPage from './pages/NotificationsPage';
 import GiftCatalogPage from "./pages/GiftCatalogPage";
 import DealerGiftInventoryPage from "./pages/DealerGiftInventoryPage";
+import ScratchRewardOrdersPage from "./pages/ScratchRewardOrdersPage";
 
 const OverviewPage = () => {
   return (
@@ -80,6 +81,11 @@ export default function App() {
           <Route
             path="dealer-gifts"
             element={<DealerGiftInventoryPage />}
+          />
+
+          <Route
+            path="scratch-orders"
+            element={<ScratchRewardOrdersPage />}
           />
 
           <Route
