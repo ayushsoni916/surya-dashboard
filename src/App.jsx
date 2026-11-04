@@ -17,6 +17,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import GiftCatalogPage from "./pages/GiftCatalogPage";
 import DealerGiftInventoryPage from "./pages/DealerGiftInventoryPage";
 import ScratchRewardOrdersPage from "./pages/ScratchRewardOrdersPage";
+import HOOrderApprovalsPage from "./pages/HOOrderApprovalsPage";
 
 const OverviewPage = () => {
   return (
@@ -73,6 +74,20 @@ export default function App() {
           <Route
             path="/orders"
             element={<OrdersPage />}
+          />
+          <Route
+            path="/team-leader-approvals"
+            element={<HOOrderApprovalsPage role="teamLeader" />}
+          />
+
+          <Route
+            path="/admin-approvals"
+            element={<HOOrderApprovalsPage role="admin" />}
+          />
+
+          <Route
+            path="/warehouse-approvals"
+            element={<HOOrderApprovalsPage role="warehouse" />}
           />
           <Route
             path="gifts"

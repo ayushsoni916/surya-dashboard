@@ -15,6 +15,9 @@ import {
     Bell,
     Gift,
     Store,
+    ShieldCheck,
+    Warehouse,
+    UserRoundCheck,
 } from "lucide-react";
 
 import {
@@ -47,6 +50,21 @@ const MENU = [
         name: "Orders",
         path: "/orders",
         icon: ShoppingCart,
+    },
+    {
+        name: "Team Leader Approvals",
+        path: "/team-leader-approvals",
+        icon: UserRoundCheck,
+    },
+    {
+        name: "Admin Approvals",
+        path: "/admin-approvals",
+        icon: ShieldCheck,
+    },
+    {
+        name: "Warehouse Approvals",
+        path: "/warehouse-approvals",
+        icon: Warehouse,
     },
     {
         name: "Gift Management",
