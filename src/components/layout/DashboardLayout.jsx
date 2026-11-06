@@ -18,6 +18,7 @@ import {
     ShieldCheck,
     Warehouse,
     UserRoundCheck,
+    QrCode
 } from "lucide-react";
 
 import {
@@ -70,6 +71,11 @@ const MENU = [
         name: "Gift Management",
         path: "/gifts",
         icon: Gift,
+    },
+    {
+        name: "Dealer QR Codes",
+        path: "/dealer-qr-codes",
+        icon: QrCode,
     },
     {
         name: "Dealer Gift Inventory",

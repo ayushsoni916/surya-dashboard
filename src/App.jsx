@@ -18,6 +18,7 @@ import GiftCatalogPage from "./pages/GiftCatalogPage";
 import DealerGiftInventoryPage from "./pages/DealerGiftInventoryPage";
 import ScratchRewardOrdersPage from "./pages/ScratchRewardOrdersPage";
 import HOOrderApprovalsPage from "./pages/HOOrderApprovalsPage";
+import DealerQRCodes from "./pages/DealerQRCodes";
 
 const OverviewPage = () => {
   return (
@@ -101,6 +102,10 @@ export default function App() {
           <Route
             path="scratch-orders"
             element={<ScratchRewardOrdersPage />}
+          />
+          <Route
+            path="/dealer-qr-codes"
+            element={<DealerQRCodes />}
           />
 
           <Route

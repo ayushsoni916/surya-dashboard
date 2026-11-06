@@ -1,2 +1,2 @@
 export const API_BASE =
-    "http://localhost:5001/api";
+    "https://api.b2belectromart.com/api";
