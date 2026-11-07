@@ -506,8 +506,13 @@ function AddStockModal({ gift, onClose, onSaved }) {
         event.preventDefault();
         const count = Number(quantity);
 
-        if (!Number.isSafeInteger(count) || count <= 0) {
-            setError("Enter a positive stock quantity");
+        if (!Number.isSafeInteger(count) || count === 0) {
+            setError("Enter a valid non-zero quantity");
+            return;
+        }
+
+        if (count < 0 && Math.abs(count) > gift.remainingQuantity) {
+            setError("Cannot reduce more than available stock");
             return;
         }
 
@@ -553,16 +558,16 @@ function AddStockModal({ gift, onClose, onSaved }) {
 
                     <label className="block">
                         <span className="block text-xs font-black text-slate-500 mb-2">
-                            Additional Quantity
+                            Stock Adjustment (+ Add / − Reduce)
                         </span>
                         <input
                             autoFocus
                             type="number"
-                            min="1"
+                            // min="1"
                             step="1"
                             required
                             className={inputClass}
-                            placeholder="Enter quantity"
+                            placeholder="e.g. 50 or -49"
                             value={quantity}
                             onChange={e => setQuantity(e.target.value)}
                         />

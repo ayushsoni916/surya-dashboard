@@ -168,6 +168,102 @@
             letter-spacing: 1.8px;
         }
 
+        .reward-showcase {
+            margin-top: 24px;
+            padding: 22px 18px;
+            border-radius: 32px;
+            background: linear-gradient(180deg, #fffdfb 0%, #fff7ef 100%);
+            border: 1px solid rgba(214, 151, 74, 0.22);
+            box-shadow: 0 18px 40px rgba(101, 39, 8, 0.08);
+        }
+
+        .reward-showcase-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            text-align: center;
+        }
+
+        .reward-image-wrap {
+            width: min(100%, 260px);
+            padding: 10px;
+            border-radius: 24px;
+            background: #fff;
+            border: 1px solid rgba(214, 151, 74, 0.18);
+            box-shadow: 0 12px 28px rgba(101, 39, 8, 0.10);
+        }
+
+        .reward-image {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            object-fit: cover;
+            border-radius: 18px;
+        }
+
+        .reward-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #8f1f18 0%, #c4471c 100%);
+            color: #fff4d6;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            box-shadow: 0 8px 18px rgba(143, 31, 24, 0.22);
+        }
+
+        .reward-title {
+            margin: 0;
+            font-size: clamp(24px, 4vw, 30px);
+            line-height: 1.25;
+            font-weight: 800;
+            color: #7a452a;
+        }
+
+        .reward-subtitle {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #9a6f4d;
+            max-width: 360px;
+        }
+
+        @media (max-width: 640px) {
+            .reward-showcase {
+                padding: 18px 14px;
+                border-radius: 24px;
+            }
+
+            .reward-image-wrap {
+                width: min(100%, 210px);
+                border-radius: 20px;
+            }
+
+            .reward-image {
+                border-radius: 14px;
+            }
+
+            .reward-title {
+                font-size: 19px;
+            }
+
+            .reward-subtitle {
+                font-size: 13px;
+            }
+        }
+
         .reward-pill {
             min-height: 35px;
             padding: 0 13px;
@@ -442,6 +538,178 @@
 
         .input-shell {
             position: relative;
+        }
+
+        .model-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .model-dropdown input {
+            width: 100%;
+            height: 46px;
+            padding: 0 14px;
+            border: 1px solid #edd7c0;
+            border-radius: 13px;
+            background: #fffdf7;
+            outline: none;
+            font-size: 12px;
+            color: #442418;
+        }
+
+        .model-dropdown input:focus {
+            border-color: #f97316;
+        }
+
+        .model-suggestions {
+            display: none;
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            max-height: 230px;
+            overflow-y: auto;
+            background: #fffdf7;
+            border: 1px solid #edd7c0;
+            border-radius: 13px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .12);
+        }
+
+        .model-suggestions.open {
+            display: block;
+        }
+
+        .model-option {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            text-align: left;
+            border: none;
+            background: transparent;
+            color: #442418;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .model-option:hover,
+        .model-option:focus {
+            background: #fff0e5;
+        }
+
+        .model-empty {
+            padding: 14px;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .product-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .product-trigger {
+            width: 100%;
+            height: 46px;
+            padding: 0 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, .62);
+            border: 1px solid #edd7c0;
+            border-radius: 13px;
+            color: #442418;
+            cursor: pointer;
+        }
+
+        .product-options {
+            display: none;
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: #fffdf7;
+            border: 1px solid #edd7c0;
+            border-radius: 13px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .12);
+            overflow: hidden;
+        }
+
+        .product-dropdown.open .product-options {
+            display: block;
+        }
+
+        .product-options button {
+            display: block;
+            width: 100%;
+            padding: 13px 16px;
+            text-align: left;
+            border: none;
+            background: transparent;
+            color: #442418;
+            cursor: pointer;
+        }
+
+        .product-options button:hover {
+            background: #fff0e5;
+        }
+
+        .input-shell select {
+            width: 100%;
+            height: 50px;
+            padding: 0 14px;
+            background: #fffdf7;
+            border: 1px solid #edd7c0;
+            border-radius: 13px;
+            font-size: 12px;
+            color: #442418;
+            outline: none;
+        }
+
+        .mobile-field {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 46px;
+            border: 1px solid rgba(110, 85, 68, 0.1);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, 0.62);
+            overflow: hidden;
+        }
+
+        .mobile-field>span {
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #8d250e;
+            white-space: nowrap;
+        }
+
+        .input-shell .mobile-field input {
+            flex: 1;
+            width: 100%;
+            min-width: 0;
+            height: 100%;
+            padding: 0 12px;
+            margin: 0;
+
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            outline: none;
+        }
+
+        .input-shell .mobile-field input:focus {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .mobile-field:focus-within {
+            border-color: rgba(249, 115, 22, 0.48);
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.08);
         }
 
         .input-shell input {
@@ -2724,7 +2992,7 @@
             display: block;
             margin-top: 3px;
             color: #9c6743;
-            font-size: 10px
+            font-size: 12px
         }
 
         .dealer-context.invalid {
@@ -3158,82 +3426,139 @@
                 max-width: 385px;
             }
         }
+
         /* Fix decorative elements causing horizontal overflow */
 
-.gift-stage {
-    position: relative;
-    overflow: hidden;
-    max-width: 100%;
-}
+        .gift-stage {
+            position: relative;
+            overflow: hidden;
+            max-width: 100%;
+        }
 
-.orbit {
-    width: min(500px, 95vw);
-    height: auto;
-    aspect-ratio: 1;
-}
+        .orbit {
+            width: min(500px, 95vw);
+            height: auto;
+            aspect-ratio: 1;
+        }
 
-.card-arch-right {
-    max-width: 35%;
-    right: 0;
-}
+        .card-arch-right {
+            max-width: 35%;
+            right: 0;
+        }
 
-/* Mobile */
-@media (max-width: 600px) {
-    .orbit {
-        width: 90vw;
-        height: 90vw;
-    }
+        /* Mobile */
+        @media (max-width: 600px) {
+            .orbit {
+                width: 90vw;
+                height: 90vw;
+            }
 
-    .card-arch-right {
-        right: 0;
-        max-width: 30%;
-    }
-}
-/* Allow card to display fully */
-.gift-stage {
-    overflow: visible;
-    min-width: 0;
-}
+            .card-arch-right {
+                right: 0;
+                max-width: 30%;
+            }
+        }
 
-/* Clip only the decorative orbit */
-.orbit {
-    width: min(90vw, 460px);
-    height: auto;
-    aspect-ratio: 1;
-    max-width: 100%;
-}
+        /* Allow card to display fully */
+        .gift-stage {
+            overflow: visible;
+            min-width: 0;
+        }
 
-/* Keep scratch card inside available width */
-.gift-wrapper {
-    width: 100%;
-    max-width: 445px;
-    min-width: 0;
-    margin-inline: auto;
-}
+        /* Clip only the decorative orbit */
+        .orbit {
+            width: min(90vw, 460px);
+            height: auto;
+            aspect-ratio: 1;
+            max-width: 100%;
+        }
 
-.gift-card {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-}
+        /* Keep scratch card inside available width */
+        .gift-wrapper {
+            width: 100%;
+            max-width: 445px;
+            min-width: 0;
+            margin-inline: auto;
+        }
 
-/* Mobile-specific fix */
-@media (max-width: 600px) {
-    .gift-stage {
-        width: 100%;
-        padding: 0;
-    }
+        .gift-card {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
 
-    .gift-wrapper {
-        width: 100%;
-        max-width: 385px;
-    }
+        /* Mobile-specific fix */
+        @media (max-width: 600px) {
+            .gift-stage {
+                width: 100%;
+                padding: 0;
+            }
 
-    .card-arch-right {
-        right: 0;
-        max-width: 30%;
-    }
-}
+            .gift-wrapper {
+                width: 100%;
+                max-width: 385px;
+            }
+
+            .card-arch-right {
+                right: 0;
+                max-width: 30%;
+            }
+        }
+
+        /* Only one section visible at a time */
+
+        .experience {
+            grid-template-columns: minmax(0, 1fr) !important;
+            justify-items: center;
+            gap: 0 !important;
+        }
+
+        .experience .form-card {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        body:not(.scratch-active) .gift-stage {
+            display: none !important;
+        }
+
+        body.scratch-active .form-card {
+            display: none !important;
+        }
+
+        body.scratch-active .gift-stage {
+            display: flex !important;
+            width: 100%;
+        }
+
+        /* Additional gift details */
+        .reward-extras {
+            width: min(100%, 400px);
+            margin: 24px auto 0;
+            padding: 18px;
+            text-align: center;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, .8);
+        }
+
+        .reward-extras[hidden] {
+            display: none !important;
+        }
+
+        .reward-extras img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 12px;
+            border-radius: 12px;
+        }
+
+        .reward-extras p {
+            color: #75452f;
+            font-size: 13px;
+            line-height: 1.6;
+        }
     </style>
 </head>
 
@@ -3248,12 +3573,12 @@
         <header class="campaign-header">
             <div class="campaign-brand">
                 <img class="surya-mark"
-                    src="https://res.cloudinary.com/foyuuafe/image/upload/v1793984101/Screenshot_2026-11-06_at_10.24.46_PM.png"
+                    src="https://res.cloudinary.com/foyuuafe/image/upload/v1794074259/WhatsApp_Image_2026-11-06_at_16.44.21.jpg"
                     alt="Surya Marketing" />
                 <div class="campaign-brand-copy"><strong>Surya Marketing</strong><span>DIWALI REWARDS 2026</span></div>
             </div>
             <div class="campaign-right"><span class="campaign-tag">✦ DIWALI SCRATCH & WIN</span><img class="lg-mark"
-                    src="https://res.cloudinary.com/foyuuafe/image/upload/v1793985152/lg.png" alt="LG" /></div>
+                    src="https://res.cloudinary.com/foyuuafe/image/upload/v1794074330/LG-Logo.webp" alt="LG" /></div>
         </header>
         <section class="campaign-hero">
             <span class="campaign-eyebrow">✦ CELEBRATE THE JOY OF REWARDS ✦</span>
@@ -3269,19 +3594,17 @@
 
             <section class="form-card">
 
-                <span class="form-kicker">
-                    LG DIWALI SCRATCH & WIN
-                </span>
-
-                <h2 class="form-title">
-                    Unlock Your Festive Reward
-                </h2>
-
                 <p class="form-description">
-                    Your participating dealer is linked through the QR code. Enter your purchase details to unlock your
-                    reward.
+                    Unlock Your Festive Reward
                 </p>
 
+                <h2 class="form-title">LG Diwali Scratch & Win</h2>
+
+
+
+                <p class="form-description">
+                    Enter Customer Purchase Details
+                </p>
 
                 <form id="voucherForm">
 
@@ -3290,7 +3613,7 @@
                         <!-- Dealer information comes ONLY from the dealer QR URL -->
                         <div class="dealer-context field-full" id="dealerContext">
                             <div class="dealer-context-icon">✓</div>
-                            <div><span>PARTICIPATING DEALER</span><strong id="dealerDisplay">Checking QR
+                            <div><span>AUTHORISED DEALER</span><strong id="dealerDisplay">Checking QR
                                     code...</strong><small id="dealerMeta"></small></div>
                         </div>
 
@@ -3302,7 +3625,8 @@
                             </label>
 
                             <div class="input-shell">
-                                <input id="customerName" type="text" placeholder="Enter customer name" required />
+                                <input id="customerName" type="text" placeholder="Enter first and last name"
+                                    autocomplete="name" required />
                             </div>
 
                         </div>
@@ -3316,8 +3640,11 @@
                             </label>
 
                             <div class="input-shell">
-                                <input id="mobileNumber" type="tel" inputmode="numeric" maxlength="10"
-                                    placeholder="10 digit mobile number" required />
+                                <div class="mobile-field">
+                                    <span>+91</span>
+                                    <input id="mobileNumber" type="tel" inputmode="numeric" maxlength="10"
+                                        placeholder="10-digit mobile number" required />
+                                </div>
                             </div>
 
                         </div>
@@ -3331,10 +3658,38 @@
                             </label>
 
                             <div class="input-shell">
-                                <input id="productPurchased" type="text"
-                                    placeholder="e.g. LG Refrigerator / Washing Machine / LED TV" required />
+                                <div class="input-shell">
+                                    <div class="product-dropdown" id="productDropdown">
+                                        <button type="button" class="product-trigger" id="productTrigger">
+                                            <span id="selectedProduct">Select LG Product</span>
+                                            <span>⌄</span>
+                                        </button>
+
+                                        <div class="product-options" id="productOptions">
+                                            <button type="button" data-value="LED TV">LED TV</button>
+                                            <button type="button" data-value="Refrigerator">Refrigerator</button>
+                                            <button type="button" data-value="Washing Machine">Washing Machine</button>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" id="productPurchased" value="">
+                                </div>
                             </div>
 
+                        </div>
+
+                        <div class="field field-full">
+                            <label for="modelSearch">
+                                LG MODEL NUMBER <span>*</span>
+                            </label>
+
+                            <div class="model-dropdown" id="modelDropdown">
+                                <input type="text" id="modelSearch" placeholder="Search LG model number..."
+                                    autocomplete="off" aria-autocomplete="list" aria-controls="modelSuggestions"
+                                    aria-expanded="false" required />
+
+                                <div class="model-suggestions" id="modelSuggestions" role="listbox"></div>
+                            </div>
                         </div>
 
 
@@ -3506,6 +3861,21 @@
 
                         </div>
 
+                    </div>
+                    <div id="rewardExtras" class="reward-showcase" hidden>
+                        <div class="reward-showcase-inner">
+                            <div id="rewardImageWrap" class="reward-image-wrap" hidden>
+                                <img id="rewardImage" class="reward-image" alt="Reward image" />
+                            </div>
+
+                            <div class="reward-copy">
+                                <div class="reward-badge">YOUR REWARD</div>
+                                <h3 id="rewardDescription" class="reward-title"></h3>
+                                <p class="reward-subtitle">
+                                    Please collect your reward from the authorised dealer.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -3689,12 +4059,122 @@
 
 
     <script>
+
+        const modelSearch = document.getElementById("modelSearch");
+        const modelSuggestions = document.getElementById("modelSuggestions");
+        const modelDropdown = document.getElementById("modelDropdown");
+
+        let lgModels = [];
+        let selectedModel = "";
+
+        fetch("./lg-models.json")
+            .then(res => {
+                if (!res.ok) throw new Error("Model list not found");
+                return res.json();
+            })
+            .then(models => {
+                lgModels = models;
+            })
+            .catch(err => console.error("LG Models:", err));
+
+        function showModelSuggestions(query = "") {
+            const search = query.trim().toUpperCase();
+
+            const filtered = lgModels
+                .filter(model => model.includes(search))
+                .slice(0, 50);
+
+            modelSuggestions.replaceChildren();
+
+            if (!filtered.length) {
+                const empty = document.createElement("div");
+                empty.className = "model-empty";
+                empty.textContent = "No matching LG model found";
+                modelSuggestions.appendChild(empty);
+            } else {
+                filtered.forEach(model => {
+                    const option = document.createElement("button");
+                    option.type = "button";
+                    option.className = "model-option";
+                    option.textContent = model;
+                    option.setAttribute("role", "option");
+
+                    option.addEventListener("click", () => {
+                        selectedModel = model;
+                        modelSearch.value = model;
+                        closeModelSuggestions();
+                    });
+
+                    modelSuggestions.appendChild(option);
+                });
+            }
+
+            modelSuggestions.classList.add("open");
+            modelSearch.setAttribute("aria-expanded", "true");
+        }
+
+        function closeModelSuggestions() {
+            modelSuggestions.classList.remove("open");
+            modelSearch.setAttribute("aria-expanded", "false");
+        }
+
+        modelSearch.addEventListener("focus", () => {
+            showModelSuggestions(modelSearch.value);
+        });
+
+        modelSearch.addEventListener("input", () => {
+            selectedModel = "";
+            showModelSuggestions(modelSearch.value);
+        });
+
+        modelSearch.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                closeModelSuggestions();
+            }
+
+            if (event.key === "Enter" &&
+                modelSuggestions.classList.contains("open")) {
+                event.preventDefault();
+                const first = modelSuggestions.querySelector(".model-option");
+                first?.click();
+            }
+        });
+
+        document.addEventListener("click", event => {
+            if (!modelDropdown.contains(event.target)) {
+                closeModelSuggestions();
+            }
+        });
+
         /* =========================
            API REWARDS + FORM
         ========================= */
 
+        const productDropdown = document.getElementById("productDropdown");
+        const productTrigger = document.getElementById("productTrigger");
+        const productOptions = document.getElementById("productOptions");
+
+        productTrigger.addEventListener("click", () => {
+            productDropdown.classList.toggle("open");
+        });
+
+        productOptions.querySelectorAll("button").forEach(button => {
+            button.addEventListener("click", () => {
+                document.getElementById("productPurchased").value = button.dataset.value;
+                document.getElementById("selectedProduct").textContent = button.dataset.value;
+                productDropdown.classList.remove("open");
+            });
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!productDropdown.contains(event.target)) {
+                productDropdown.classList.remove("open");
+            }
+        });
+
         // Change only this URL when deploying the website.
         const API_BASE = "https://api.b2belectromart.com/api";
+        // const API_BASE = "http://localhost:5001/api";
 
         const voucherForm = document.getElementById("voucherForm");
         const formMessage = document.getElementById("formMessage");
@@ -3727,14 +4207,62 @@
                 source: gift.source || "surya",
             };
 
+            const rewardImageUrl =
+                (typeof gift.image === "string" ? gift.image : gift.image?.url) ||
+                gift.imageUrl ||
+                gift.thumbnail?.url ||
+                "";
+
+            const rewardText =
+                gift.description ||
+                gift.shortDescription ||
+                "";
+
+            const rewardExtras = document.getElementById("rewardExtras");
+            const rewardImage = document.getElementById("rewardImage");
+            const rewardImageWrap = document.getElementById("rewardImageWrap");
+            const rewardDescription = document.getElementById("rewardDescription");
+
+            // Hide until scratching is completed
+            rewardExtras.hidden = true;
+            rewardImageWrap.hidden = true;
+            rewardDescription.hidden = true;
+
+            rewardImage.onload = null;
+            rewardImage.onerror = null;
+            rewardImage.removeAttribute("src");
+
+            if (rewardImageUrl) {
+                rewardImage.onload = () => {
+                    rewardImageWrap.hidden = false;
+                };
+
+                rewardImage.onerror = () => {
+                    rewardImageWrap.hidden = true;
+                };
+
+                rewardImage.src = rewardImageUrl;
+            }
+
+            if (rewardText) {
+                rewardDescription.textContent = rewardText;
+                rewardDescription.hidden = false;
+            } else {
+                rewardDescription.textContent = rewardName;
+                rewardDescription.hidden = false;
+            }
+
             document.getElementById("rewardValue").textContent = rewardName;
+
             document.getElementById("rewardMessage").textContent =
-                rewardValue !== null && rewardValue !== undefined && rewardValue !== ""
+                rewardValue !== null &&
+                    rewardValue !== undefined &&
+                    rewardValue !== ""
                     ? `${rewardType === "cash_voucher" ? "Voucher value" : "Reward value"}: ₹${Number(rewardValue).toLocaleString("en-IN")}`
                     : "Exclusive Gift Unlocked";
+
             document.getElementById("rewardCode").textContent = rewardCode;
         }
-
         // Safe placeholders before an actual voucher is returned by the API.
         document.getElementById("rewardValue").textContent = "Your Gift";
         document.getElementById("rewardMessage").textContent = "Complete registration to unlock";
@@ -3754,7 +4282,7 @@
         const dealerContext = document.getElementById("dealerContext");
         if (qrValid) {
             dealerDisplay.textContent = dealerFromQR.dealerName;
-            dealerMeta.textContent = `${dealerFromQR.city} · GTM ${dealerFromQR.gtmCode}`;
+            dealerMeta.textContent = `GTM ${dealerFromQR.gtmCode}`;
         } else {
             dealerDisplay.textContent = "Dealer QR code required";
             dealerMeta.textContent = "Scan the QR code provided by your participating dealer.";
@@ -3777,13 +4305,36 @@
                 fields.map(field => [field, document.getElementById(field).value.trim()])
             );
             // Exact original API field names preserved.
-            const payload = { ...dealerFromQR, ...customerFields };
+            const payload = {
+                ...dealerFromQR,
+                ...customerFields,
+                modelNumber: selectedModel,
+            };
             if (fields.some(field => !payload[field])) {
                 setFormMessage("Please complete all required purchase details.");
                 return;
             }
+            if (!/^[A-Za-z]+(?:\s+[A-Za-z]+)+$/.test(payload.customerName)) {
+                setFormMessage("Please enter your first and last name.");
+                return;
+            }
             if (!/^[6-9]\d{9}$/.test(payload.mobileNumber)) {
                 setFormMessage("Please enter a valid 10 digit mobile number.");
+                return;
+            }
+
+            payload.serialNumber = payload.serialNumber.toUpperCase();
+
+            if (!/^\d{3}[A-Z]{4}\d{6}$/.test(payload.serialNumber)) {
+                setFormMessage(
+                    "Invalid serial number. Example: 605NRER685613"
+                );
+                return;
+            }
+
+            if (!selectedModel || !lgModels.includes(selectedModel)) {
+                setFormMessage("Please select a valid LG model number.");
+                modelSearch.focus();
                 return;
             }
 
@@ -3797,7 +4348,7 @@
             // Lock the previous card while verifying the new purchase.
             formUnlocked = false;
             cardLock.classList.remove("unlocked");
-            resetScratchCard();
+            // resetScratchCard();
 
             try {
                 const response = await fetch(`${API_BASE}/scratch-rewards/scratch`, {
@@ -3813,7 +4364,24 @@
 
                 voucherFormData = payload;
                 setRewardDetails(result.data);
-                resetScratchCard();
+
+                // Form hide, Scratch Card visible
+                document.body.classList.add("scratch-active");
+
+                // Canvas visible hone ke baad initialize karo
+                requestAnimationFrame(() => {
+                    resetScratchCard();
+
+                    if (result.alreadyScratched) {
+                        revealReward(true);
+                    }
+
+                    document.querySelector(".gift-stage")
+                        .scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                });
 
                 document.querySelectorAll(".input-shell input").forEach(
                     input => input.classList.add("valid")
@@ -3826,18 +4394,14 @@
                     { duration: 700, easing: "cubic-bezier(.2,.8,.2,1)" }
                 );
 
-                if (result.alreadyScratched) {
-                    // Previously issued reward: do not require another scratch gesture.
-                    setFormMessage("✓ Already scratched. Showing your previously assigned reward.", true);
-                    revealReward(true);
-                } else {
-                    setFormMessage("✓ Details verified. Scratch your card to reveal the gift.", true);
-                    statusText.innerHTML = 'Scratch the card to reveal <strong>your gift</strong>';
+                if (!result.alreadyScratched) {
+                    statusText.innerHTML =
+                        'Scratch the card to reveal <strong>your gift</strong>';
                 }
 
-                setTimeout(() => {
-                    giftCard.scrollIntoView({ behavior: "smooth", block: "center" });
-                }, 250);
+                // setTimeout(() => {
+                //     giftCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                // }, 250);
             } catch (error) {
                 setFormMessage(error.message || "Something went wrong. Please try again.");
                 document.querySelectorAll(".input-shell input").forEach(
@@ -4502,6 +5066,7 @@
 
 
         function resetScratchCard() {
+            document.getElementById("rewardExtras").hidden = true;
             scratching = false;
             revealed = false;
             movementCount = 0;
@@ -4970,15 +5535,17 @@
 
         function revealReward(alreadyScratched = false) {
 
-            if (
-                revealed
-            ) {
-                return;
-            }
+            if (revealed) { return; }
 
 
-            revealed =
-                true;
+            revealed = true;
+
+            const rewardExtras = document.getElementById("rewardExtras");
+            const rewardImageWrap = document.getElementById("rewardImageWrap");
+            const rewardDescription = document.getElementById("rewardDescription");
+
+            rewardExtras.hidden =
+                rewardImageWrap.hidden && rewardDescription.hidden;
 
 
             scratchCanvas
@@ -5000,8 +5567,8 @@
 
 
             statusText.innerHTML = alreadyScratched
-                ? "<strong>Already Scratched!</strong> Your previously assigned voucher is shown"
-                : "<strong>Congratulations!</strong> Your voucher is unlocked";
+                ? "<strong>You already unlocked this reward!</strong> Here's your gift 🎁"
+                : "<strong>Congratulations!</strong> Your gift is unlocked 🎉";
 
 
             successBox
